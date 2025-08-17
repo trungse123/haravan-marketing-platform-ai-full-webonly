@@ -16,7 +16,8 @@ app.use(morgan('dev'));
 
 app.use('/admin', require('./routes/admin'));
 app.use('/ai', require('./routes/ai'));
-
+app.use('/exports', require('express').static('exports'));
+app.get('/', (req, res) => res.send('OK'));
 app.get('/health', (req, res) => res.json({ ok: true }));
 
 connect().then(async () => {
