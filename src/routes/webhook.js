@@ -1,40 +1,25 @@
 const express = require('express');
-const { verifyHaravanHmac } = require('../utils/hmac');
 const { err } = require('../utils/logger');
 const Order = require('../models/Order');
 const Product = require('../models/Product');
 const { computeDaily } = require('../services/metrics');
 
 const router = express.Router();
-
-// Giữ raw body để (nếu bật) còn verify HMAC
+// GIỮ raw body
 router.use('/haravan', express.raw({ type: 'application/json' }));
 
-router.post('/haravan/:token?', async (req, res) => {
+router.post('/haravan', async (req, res) => {
   try {
-    const skip = process.env.SKIP_WEBHOOK_VERIFY === 'true';
-
-    if (!skip) {
-      const sig = req.header('X-Haravan-Hmacsha256');
-      const ok = verifyHaravanHmac(req.body, sig);
-      if (!ok) return res.sendStatus(401);
-    }
-    // Trả 200 sớm để không bị timeout từ phía Haravan/Postman
-    res.sendStatus(200);
+    // >>> DEV: bỏ verify luôn
+    res.sendStatus(200); // trả 200 sớm, tránh timeout từ Haravan
 
     const payloadText = req.body?.toString('utf8') || '{}';
     const payload = JSON.parse(payloadText);
-    const topic =
-      req.header('X-Haravan-Topic') ||
-      req.query.topic ||
-      payload?.topic ||
-      'manual/test';
+    const topic = req.header('X-Haravan-Topic') || req.query.topic || payload?.topic || 'orders/create';
 
     if (topic.includes('orders'))      await handleOrder(payload);
     else if (topic.includes('products')) await handleProduct(payload);
-  } catch (e) {
-    err('Webhook error', e);
-  }
+  } catch (e) { err('Webhook error', e); }
 });
 
 async function handleOrder(payload) {
@@ -44,19 +29,14 @@ async function handleOrder(payload) {
   const items = (o.line_items || []).map(li => ({
     product_id_hrv: li.product_id,
     variant_id_hrv: li.variant_id,
-    sku: li.sku,
-    title: li.title,
-    fandom: li.vendor || '',
-    qty: li.quantity,
-    price: parseFloat(li.price || 0),
-    discount_allocation: 0,
-    cogs: 0
+    sku: li.sku, title: li.title, fandom: li.vendor || '',
+    qty: li.quantity, price: parseFloat(li.price || 0),
+    discount_allocation: 0, cogs: 0
   }));
 
-  const doc = await require('../models/Order').findOneAndUpdate(
+  const doc = await Order.findOneAndUpdate(
     { id_hrv: o.id },
-    {
-      $set: {
+    { $set: {
         name: o.name,
         created_at: o.created_at ? new Date(o.created_at) : new Date(),
         processed_at: o.processed_at ? new Date(o.processed_at) : null,
@@ -68,11 +48,9 @@ async function handleOrder(payload) {
         currency: o.currency || 'VND',
         source_name: o.source_name || '',
         utm_source: o.source_name || '',
-        utm_medium: '',
-        utm_campaign: '',
+        utm_medium: '', utm_campaign: '',
         items
-      }
-    },
+      }},
     { upsert: true, new: true }
   );
 
@@ -82,19 +60,16 @@ async function handleOrder(payload) {
 async function handleProduct(payload) {
   const p = payload.product || payload;
   if (!p || !p.id) return;
-
-  await require('../models/Product').findOneAndUpdate(
+  await Product.findOneAndUpdate(
     { id_hrv: p.id },
-    {
-      $set: {
+    { $set: {
         title: p.title,
         sku: (p.variants && p.variants[0]?.sku) || '',
         cogs: 0,
         price: (p.variants && parseFloat(p.variants[0]?.price || 0)) || 0,
         status: p.status || 'active',
         updated_at: p.updated_at ? new Date(p.updated_at) : new Date()
-      }
-    },
+      }},
     { upsert: true, new: true }
   );
 }
