@@ -19,6 +19,7 @@ app.use('/ai', require('./routes/ai'));
 app.use('/exports', require('express').static('exports'));
 app.get('/', (req, res) => res.send('OK'));
 app.get('/health', (req, res) => res.json({ ok: true }));
+app.use('/admin', require('./routes/sync'));   // thêm dòng này
 
 connect().then(async () => {
   if (process.env.START_JOBS === 'true') {
