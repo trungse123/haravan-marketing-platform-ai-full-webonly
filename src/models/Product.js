@@ -4,7 +4,10 @@ const ProductSchema = new Schema({
   id_hrv: { type: Number, index: true },
   title: String,
   sku: String,
-  fandom: String,
+  // NHÓM THEO SMART COLLECTION
+  smart_groups: [{ id: Number, handle: String, title: String }],
+  primary_group: String,   // dùng để quy chiếu nhanh
+  // cũ: cogs/price/status...
   cogs: Number,
   price: Number,
   status: String,
