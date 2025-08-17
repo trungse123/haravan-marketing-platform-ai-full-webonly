@@ -1,0 +1,39 @@
+
+services:
+  - type: web
+    name: hrv-marketing-web
+    env: node
+    plan: free
+    buildCommand: "npm install"
+    startCommand: "npm start"
+    envVars:
+      - key: MONGODB_URI
+        sync: false
+      - key: HRV_ACCESS_TOKEN
+        sync: false
+      - key: HRV_CLIENT_SECRET
+        sync: false
+      - key: APP_BASE_URL
+        sync: false
+      - key: HRV_API_BASE
+        value: https://apis.haravan.com
+      - key: GM_PERCENT
+        value: "0.30"
+      - key: FIXED_COSTS_MONTH
+        value: "30000000"
+      - key: DESIRED_PROFIT_MONTH
+        value: "10000000"
+      - key: SELLING_DAYS
+        value: "26"
+      - key: CASH_CONVERSION_RATIO
+        value: "0.8"
+      - key: OPENING_CASH_BALANCE
+        value: "20000000"
+      - key: TIMEZONE
+        value: Asia/Ho_Chi_Minh
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: OPENAI_MODEL
+        value: gpt-4.1-mini
+      - key: START_JOBS
+        value: "true"

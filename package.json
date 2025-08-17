@@ -1,0 +1,24 @@
+{
+  "name": "haravan-marketing-platform-ai",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "nodemon src/server.js",
+    "start": "node src/server.js",
+    "backfill": "node src/scripts/backfill.js",
+    "subscribe:webhooks": "node src/scripts/subscribeWebhooks.js"
+  },
+  "dependencies": {
+    "agenda": "^5.0.0",
+    "axios": "^1.7.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "morgan": "^1.10.0",
+    "mongoose": "^8.5.0",
+    "openai": "^4.53.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.0"
+  }
+}
